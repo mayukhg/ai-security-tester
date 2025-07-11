@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Configuration - AI Security Testing{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-cog text-secondary"></i>
+                Configuration
+            </h1>
+            <p class="lead">Edit and save configuration settings for the AI Security Testing Application.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sliders"></i>
+                        General Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="config-form">
+                        <div class="mb-3">
+                            <label for="model_endpoints" class="form-label">
+                                <i class="fas fa-server"></i>
+                                Model Endpoints
+                            </label>
+                            <textarea class="form-control" id="model_endpoints" rows="5">{{ config.model_endpoints|tojson(indent=2) }}</textarea>
+                            <div class="form-text">
+                                Edit the model endpoints configuration as JSON.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="test_suites" class="form-label">
+                                <i class="fas fa-check"></i>
+                                Test Suites
+                            </label>
+                            <textarea class="form-control" id="test_suites" rows="5">{{ config.test_suites|tojson(indent=2) }}</textarea>
+                            <div class="form-text">
+                                Define the test suites and their included tests.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="attack_params" class="form-label">
+                                <i class="fas fa-crosshairs"></i>
+                                Attack Parameters
+                            </label>
+                            <textarea class="form-control" id="attack_params" rows="5">{{ config.attack_parameters|tojson(indent=2) }}</textarea>
+                            <div class="form-text">
+                                Set parameters for attack attempts and timeouts.
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-lg" id="save-config-btn">
+                            <i class="fas fa-save"></i>
+                            Save Configuration
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Instructions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-chevron-right"></i>
+                            JSON format is required for configuration entries.
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-chevron-right"></i>
+                            Be cautious when editing to avoid syntax errors.
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-chevron-right"></i>
+                            Default configuration will be restored on invalid input.
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-chevron-right"></i>
+                            Changes take effect immediately after saving.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        Note
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Only authorized users should modify these settings.
+                    </p>
+                    <p class="text-muted">
+                        Keep your server endpoints secure and confidential.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#save-config-btn').click(function() {
+        var modelEndpoints = $('#model_endpoints').val();
+        var testSuites = $('#test_suites').val();
+        var attackParams = $('#attack_params').val();
+
+        try {
+            var configData = {
+                "model_endpoints": JSON.parse(modelEndpoints),
+                "test_suites": JSON.parse(testSuites),
+                "attack_parameters": JSON.parse(attackParams)
+            };
+
+            $.ajax({
+                url: '/api/config',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(configData),
+                success: function(response) {
+                    alert('Configuration saved successfully!');
+                },
+                error: function(xhr, status, error) {
+                    alert('Error saving configuration: ' + xhr.responseJSON.message);
+                }
+            });
+        } catch (e) {
+            alert('Invalid JSON input: ' + e.message);
+        }
+    });
+});
+</script>
+{% endblock %}
+

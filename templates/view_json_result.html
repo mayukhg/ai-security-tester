@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}View JSON Result - AI Security Testing{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-file-code text-info"></i>
+                JSON Result Viewer
+            </h1>
+            <p class="lead">Viewing results from: <code>{{ filename }}</code></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar"></i>
+                        Test Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if data.summary %}
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-primary">{{ data.summary.total_tests }}</h3>
+                                <p class="text-muted">Total Tests</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-success">{{ data.summary.passed_tests }}</h3>
+                                <p class="text-muted">Passed</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-warning">{{ data.summary.failed_tests }}</h3>
+                                <p class="text-muted">Failed</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-danger">{{ data.summary.vulnerabilities_found }}</h3>
+                                <p class="text-muted">Vulnerabilities</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>Report Generated:</strong> {{ data.timestamp }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i>
+                        Test Results
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if data.test_results %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Test Name</th>
+                                        <th>Status</th>
+                                        <th>Vulnerable</th>
+                                        <th>Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for test in data.test_results %}
+                                    <tr>
+                                        <td>{{ test.test_name }}</td>
+                                        <td>
+                                            {% if test.passed %}
+                                                <span class="badge bg-success">Passed</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Failed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if test.vulnerable %}
+                                                <span class="badge bg-warning">Yes</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">No</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if test.error %}
+                                                <span class="text-danger">{{ test.error }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No test results data available.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code"></i>
+                        Raw JSON Data
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <pre><code id="json-data">{{ data|tojson(indent=2) }}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        File Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Filename:</strong> {{ filename }}</p>
+                    <p><strong>Format:</strong> JSON</p>
+                    <p><strong>Generated:</strong> {{ data.timestamp if data.timestamp else 'Unknown' }}</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-download"></i>
+                        Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('download_result', filename=filename) }}" class="btn btn-primary btn-block">
+                        <i class="fas fa-download"></i> Download JSON File
+                    </a>
+                    <a href="{{ url_for('results') }}" class="btn btn-secondary btn-block mt-2">
+                        <i class="fas fa-arrow-left"></i> Back to Results
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add syntax highlighting to JSON
+    $('#json-data').addClass('language-json');
+    
+    // You can add syntax highlighting library here if needed
+    // Example: Prism.js or highlight.js
+});
+</script>
+{% endblock %}

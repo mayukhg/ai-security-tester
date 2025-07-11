@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Run Tests - AI Security Testing{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-play text-success"></i>
+                Run Security Tests
+            </h1>
+            <p class="lead">Configure and run security tests against your AI model.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog"></i>
+                        Test Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('run_test') }}">
+                        <div class="mb-3">
+                            <label for="target_model" class="form-label">
+                                <i class="fas fa-robot"></i>
+                                Target Model *
+                            </label>
+                            <input type="text" class="form-control" id="target_model" name="target_model" 
+                                   placeholder="e.g., gpt-3.5-turbo, claude-3-sonnet, http://localhost:8000/v1/chat/completions" 
+                                   required>
+                            <div class="form-text">
+                                Enter the model name or API endpoint to test.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="test_suite" class="form-label">
+                                <i class="fas fa-list-check"></i>
+                                Test Suite *
+                            </label>
+                            <select class="form-select" id="test_suite" name="test_suite" required>
+                                <option value="">Select a test suite</option>
+                                {% if config.test_suites %}
+                                    {% for suite_name, tests in config.test_suites.items() %}
+                                        <option value="{{ suite_name }}">
+                                            {{ suite_name.title() }} Suite ({{ tests|length }} tests)
+                                        </option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="basic">Basic Suite</option>
+                                    <option value="comprehensive">Comprehensive Suite</option>
+                                {% endif %}
+                            </select>
+                            <div class="form-text">
+                                Choose the test suite to run.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="output_format" class="form-label">
+                                <i class="fas fa-file-export"></i>
+                                Output Format
+                            </label>
+                            <select class="form-select" id="output_format" name="output_format">
+                                <option value="html">HTML Report</option>
+                                <option value="json">JSON Report</option>
+                                <option value="csv">CSV Report</option>
+                            </select>
+                            <div class="form-text">
+                                Choose the format for the test results.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="agree_terms" required>
+                                <label class="form-check-label" for="agree_terms">
+                                    I confirm that I have permission to test this model and will use this tool responsibly.
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-play"></i>
+                            Start Security Test
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Test Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">Available Test Suites:</h6>
+                    
+                    {% if config.test_suites %}
+                        {% for suite_name, tests in config.test_suites.items() %}
+                            <div class="mb-3">
+                                <strong>{{ suite_name.title() }} Suite</strong>
+                                <div class="text-muted small">
+                                    {{ tests|length }} tests included:
+                                </div>
+                                <ul class="list-unstyled small ms-3">
+                                    {% for test in tests %}
+                                        <li>
+                                            <i class="fas fa-check-circle text-success"></i>
+                                            {{ test.replace('_', ' ').title() }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="mb-3">
+                            <strong>Basic Suite</strong>
+                            <div class="text-muted small">Essential security tests</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Comprehensive Suite</strong>
+                            <div class="text-muted small">Full vulnerability assessment</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        Important Notes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-shield-alt text-info"></i>
+                            Only test models you own or have permission to test
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-clock text-warning"></i>
+                            Tests may take several minutes to complete
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-chart-bar text-success"></i>
+                            Results will be available in the Results section
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-download text-primary"></i>
+                            Reports can be downloaded in multiple formats
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add form validation
+    $('#target_model').on('input', function() {
+        var input = $(this);
+        var value = input.val().trim();
+        
+        if (value) {
+            input.removeClass('is-invalid').addClass('is-valid');
+        } else {
+            input.removeClass('is-valid').addClass('is-invalid');
+        }
+    });
+
+    // Show test suite details
+    $('#test_suite').on('change', function() {
+        var suite = $(this).val();
+        // You can add more dynamic content here based on selected suite
+    });
+});
+</script>
+{% endblock %}

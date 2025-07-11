@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Test Status - AI Security Testing{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-chart-line text-info"></i>
+                Test Status
+            </h1>
+            <p class="lead">Monitoring test progress for ID: <code>{{ test_id }}</code></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog fa-spin" id="status-icon"></i>
+                        <span id="status-title">Test Progress</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 id="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: 0%">
+                                <span id="progress-text">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info" id="status-message">
+                        <i class="fas fa-info-circle"></i>
+                        Initializing test...
+                    </div>
+                    
+                    <div id="test-details" class="mt-4" style="display: none;">
+                        <h6>Test Details:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Start Time:</strong> <span id="start-time">-</span>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>End Time:</strong> <span id="end-time">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="test-results" class="mt-4" style="display: none;">
+                        <h6>Test Results:</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h3 id="total-tests" class="text-primary">-</h3>
+                                        <p class="card-text">Total Tests</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h3 id="passed-tests" class="text-success">-</h3>
+                                        <p class="card-text">Passed</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h3 id="failed-tests" class="text-warning">-</h3>
+                                        <p class="card-text">Failed</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h3 id="vulnerabilities" class="text-danger">-</h3>
+                                        <p class="card-text">Vulnerabilities</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="completed-actions" class="mt-4" style="display: none;">
+                        <hr>
+                        <h6>Actions:</h6>
+                        <a href="{{ url_for('results') }}" class="btn btn-primary">
+                            <i class="fas fa-chart-bar"></i> View All Results
+                        </a>
+                        <button class="btn btn-success" id="view-report-btn" style="display: none;">
+                            <i class="fas fa-file-alt"></i> View Report
+                        </button>
+                        <button class="btn btn-info" id="download-report-btn" style="display: none;">
+                            <i class="fas fa-download"></i> Download Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i>
+                        Test Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Test ID:</strong> <code>{{ test_id }}</code></p>
+                    <p><strong>Status:</strong> <span id="current-status" class="badge bg-secondary">Unknown</span></p>
+                    <p><strong>Auto-refresh:</strong> <span class="badge bg-info">Every 2 seconds</span></p>
+                    
+                    <hr>
+                    
+                    <h6>Test Phases:</h6>
+                    <ul class="list-unstyled">
+                        <li id="phase-init" class="mb-2">
+                            <i class="fas fa-circle text-muted"></i>
+                            Initialization
+                        </li>
+                        <li id="phase-running" class="mb-2">
+                            <i class="fas fa-circle text-muted"></i>
+                            Running Tests
+                        </li>
+                        <li id="phase-report" class="mb-2">
+                            <i class="fas fa-circle text-muted"></i>
+                            Generating Report
+                        </li>
+                        <li id="phase-complete" class="mb-2">
+                            <i class="fas fa-circle text-muted"></i>
+                            Completed
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i>
+                        Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="activity-log" class="small">
+                        <div class="activity-item">
+                            <span class="text-muted" id="activity-timestamp">-</span><br>
+                            <span id="activity-message">Test started</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let testId = '{{ test_id }}';
+let refreshInterval;
+
+function updateStatus() {
+    $.get('/api/test-status/' + testId, function(data) {
+        updateUI(data);
+    }).fail(function() {
+        console.error('Failed to fetch test status');
+    });
+}
+
+function updateUI(data) {
+    const status = data.status;
+    const message = data.message;
+    const progress = data.progress || 0;
+    
+    // Update progress bar
+    $('#progress-bar').css('width', progress + '%');
+    $('#progress-text').text(progress + '%');
+    
+    // Update status message
+    $('#status-message').html('<i class="fas fa-info-circle"></i> ' + message);
+    
+    // Update current status badge
+    const statusBadge = $('#current-status');
+    statusBadge.removeClass('bg-secondary bg-warning bg-success bg-danger');
+    
+    if (status === 'running') {
+        statusBadge.addClass('bg-warning').text('Running');
+        $('#status-icon').removeClass('fa-check fa-times').addClass('fa-cog fa-spin');
+        updatePhaseIndicators(progress);
+    } else if (status === 'completed') {
+        statusBadge.addClass('bg-success').text('Completed');
+        $('#status-icon').removeClass('fa-cog fa-spin fa-times').addClass('fa-check');
+        $('#progress-bar').removeClass('progress-bar-animated');
+        updatePhaseIndicators(100);
+        showCompletedResults(data);
+        clearInterval(refreshInterval);
+    } else if (status === 'error') {
+        statusBadge.addClass('bg-danger').text('Error');
+        $('#status-icon').removeClass('fa-cog fa-spin fa-check').addClass('fa-times');
+        $('#progress-bar').removeClass('progress-bar-animated').addClass('bg-danger');
+        updatePhaseIndicators(0);
+        clearInterval(refreshInterval);
+    }
+    
+    // Update timestamps
+    if (data.start_time) {
+        $('#start-time').text(new Date(data.start_time).toLocaleString());
+        $('#test-details').show();
+    }
+    if (data.end_time) {
+        $('#end-time').text(new Date(data.end_time).toLocaleString());
+    }
+    
+    // Update activity log
+    updateActivityLog(data);
+}
+
+function updatePhaseIndicators(progress) {
+    const phases = ['#phase-init', '#phase-running', '#phase-report', '#phase-complete'];
+    
+    phases.forEach((phase, index) => {
+        const icon = $(phase + ' i');
+        icon.removeClass('text-muted text-warning text-success');
+        
+        if (progress >= (index + 1) * 25) {
+            icon.addClass('text-success').removeClass('fa-circle').addClass('fa-check-circle');
+        } else if (progress >= index * 25) {
+            icon.addClass('text-warning').removeClass('fa-circle').addClass('fa-cog fa-spin');
+        } else {
+            icon.addClass('text-muted').removeClass('fa-check-circle fa-cog fa-spin').addClass('fa-circle');
+        }
+    });
+}
+
+function showCompletedResults(data) {
+    if (data.results) {
+        const results = data.results;
+        $('#total-tests').text(results.total_tests || 0);
+        $('#passed-tests').text(results.passed_tests || 0);
+        $('#failed-tests').text(results.failed_tests || 0);
+        $('#vulnerabilities').text(results.vulnerabilities_found || 0);
+        $('#test-results').show();
+    }
+    
+    if (data.output_file) {
+        $('#view-report-btn').show().click(function() {
+            window.open('/view-result/' + data.output_file, '_blank');
+        });
+        $('#download-report-btn').show().click(function() {
+            window.location.href = '/download-result/' + data.output_file;
+        });
+    }
+    
+    $('#completed-actions').show();
+}
+
+function updateActivityLog(data) {
+    const timestamp = new Date().toLocaleTimeString();
+    $('#activity-timestamp').text(timestamp);
+    $('#activity-message').text(data.message || 'Status update');
+}
+
+$(document).ready(function() {
+    // Start polling for status updates
+    updateStatus();
+    refreshInterval = setInterval(updateStatus, 2000);
+    
+    // Clear interval when page is unloaded
+    $(window).on('beforeunload', function() {
+        clearInterval(refreshInterval);
+    });
+});
+</script>
+{% endblock %}

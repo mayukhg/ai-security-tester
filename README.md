@@ -42,13 +42,19 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Basic Usage
+### Web Interface (Recommended)
 ```bash
-python main.py --target-model "your_model_endpoint" --test-suite basic
+# Start the web application
+python app.py
 ```
+Then open your browser to `http://localhost:5000`
 
-### Advanced Usage
+### Command Line Interface
 ```bash
+# Basic usage
+python main.py --target-model "your_model_endpoint" --test-suite basic
+
+# Advanced usage
 python main.py --target-model "your_model_endpoint" --test-suite comprehensive --output-format json --save-results
 ```
 

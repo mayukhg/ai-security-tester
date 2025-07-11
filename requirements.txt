@@ -1,4 +1,5 @@
 # Core dependencies for AI Security Testing Application
+Flask>=2.3.0
 PyYAML>=6.0
 requests>=2.31.0
 numpy>=1.24.0
