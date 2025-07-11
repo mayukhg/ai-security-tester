@@ -1,0 +1,52 @@
+# AI Security Testing Application Configuration
+
+# Model endpoints configuration
+model_endpoints:
+  openai:
+    api_key_env: "OPENAI_API_KEY"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-3.5-turbo"
+  
+  anthropic:
+    api_key_env: "ANTHROPIC_API_KEY"
+    base_url: "https://api.anthropic.com/v1"
+    model: "claude-3-sonnet-20240229"
+  
+  local:
+    base_url: "http://localhost:8000"
+    model: "local-model"
+
+# Test suite definitions
+test_suites:
+  basic:
+    - "prompt_injection_basic"
+    - "jailbreak_basic"
+    - "data_extraction_basic"
+  
+  comprehensive:
+    - "prompt_injection_comprehensive"
+    - "adversarial_attacks"
+    - "jailbreak_comprehensive"
+    - "data_extraction_comprehensive"
+    - "bias_testing"
+    - "privacy_leakage"
+
+# Attack parameters
+attack_parameters:
+  max_attempts: 5
+  timeout: 30
+  rate_limit: 1.0  # requests per second
+  retry_count: 3
+
+# Output configuration
+output:
+  include_prompts: true
+  include_responses: true
+  include_metadata: true
+  severity_threshold: "medium"
+
+# Safety configuration
+safety:
+  content_filtering: true
+  harmful_content_detection: true
+  automatic_stop: true
